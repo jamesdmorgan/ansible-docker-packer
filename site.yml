@@ -1,0 +1,35 @@
+---
+- hosts: local
+  connection: local
+  vars:
+    packer_file: packer_0.7.5_linux_amd64.zip
+    packer_url: "https://dl.bintray.com/mitchellh/packer/{{ packer_file }}"
+    packer_install_dir: /usr/local/packer
+  tasks:
+    - name: Install common tools
+      yum: name={{ item }} state=present
+      with_items:
+        - unzip
+        - wget
+        - bc
+        - ncdu
+        - sysstat
+        - time
+        - tree
+
+    - name: Create Packer directory
+      file: path={{ packer_install_dir }} mode='0755' owner=root group=root state=directory
+
+    - name: Download Packer.io
+      get_url:
+        url: "{{ packer_url }}"
+        dest: "/tmp"
+        validate_certs: no
+
+    - name: Unpack Packer.io
+      unarchive:
+        src: "/tmp/{{ packer_file }}"
+        dest: /usr/local/packer
+
+    - name: Cleanup Packer
+      file: path=/tmp/{{ packer_file }} state=absent
